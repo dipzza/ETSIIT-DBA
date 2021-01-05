@@ -16,6 +16,7 @@ public class Explorer {
         ConsoleBoot app = new ConsoleBoot("DRON", args);
         app.selectConnection();
         
+        app.launchAgent("SeñorVisor", awacs.Awacs.class);
         app.launchAgent("ElPepe", Coach.class);
         app.launchAgent("SeñorEscucha", Listener.class);
         app.launchAgent("SeñorBusca1", Rescuer.class);

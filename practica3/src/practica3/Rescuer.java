@@ -14,6 +14,8 @@ import jade.lang.acl.ACLMessage;
 import java.util.ArrayList;
 
 public class Rescuer extends AgentInterface {
+    int worldWidth, worldHeight;
+    ACLMessage replyToWM;
 
     @Override
     protected void plainExecute() {
@@ -53,7 +55,7 @@ public class Rescuer extends AgentInterface {
                 // Choose one of the available service providers, i.e., the first one
                 myWorldManager = myYP.queryProvidersofService(myService).iterator().next();
 
-                // Wait for CONV-ID from COACH
+                // Wait for CONV-ID and map dimensions from COACH
                 in = blockingReceive();
                 myError = in.getPerformative() != ACLMessage.QUERY_IF;
                 if (myError) {
@@ -73,6 +75,7 @@ public class Rescuer extends AgentInterface {
                     myStatus = "CHECKOUT-LARVA";
                     break;
                 }
+                replyToWM = in.createReply();
                 
                 sendMsg("ElPepe", ACLMessage.INFORM, "REGULAR", in.getContent());
 
@@ -82,7 +85,33 @@ public class Rescuer extends AgentInterface {
             case "LOGIN":
                 in = blockingReceive();
                 if (in.getProtocol().equals("REGULAR")) {
-                    System.out.println("habría q pillar los sensores y logearse");
+                    myError = in.getPerformative() != ACLMessage.INFORM;
+                    if (myError) {
+                        Info("\t" + ACLMessage.getPerformative(in.getPerformative())
+                                + "Getting sensors failed due to " + getDetailsLARVA(in));
+                        myStatus = "CHECKOUT-SESSION";
+                        break;
+                    }
+                    JsonObject answer = Json.parse(in.getContent()).asObject();
+                    JsonArray sensors = answer.get("sensors").asArray();
+                    worldWidth = answer.get("width").asInt();
+                    worldHeight = answer.get("height").asInt();
+                    
+
+                    Info("Sensors and World Size received. Login to world");
+                    int x = 0, y = 0;
+
+                    switch(getLocalName()) {
+                        case "SeñorBusca1": x = 0; y = 0; break;
+                        case "SeñorBusca2": x = worldWidth; y = 0; break;
+                        case "SeñorBusca3": x = 0; y = worldHeight; break;
+                        case "SeñorBusca4": x = worldWidth; y = worldHeight; break;
+                    }
+
+                    in = sendLogin(sensors, x, y);
+
+                    myStatus = "CHECKOUT-SESSION";
+
                 } else if (in.getProtocol().equals("BROADCAST")) {
                     System.out.println("no ta hecho");
                 } else {
@@ -112,4 +141,29 @@ public class Rescuer extends AgentInterface {
                 break;
         }
     }
+
+    // 106 (REQUEST
+    // :sender  ( agent-identifier :name Hound#1@CAJAR  :addresses (sequence http://numenor:7778/acc ))
+    // :receiver  (set ( agent-identifier :name WorldManager1@CAJAR ) )
+    // :content  "{\"operation\":\"login\",\"attach\":[\"ALIVE#BRKTXKTFTIIU\",\"ONTARGET#BRPEFGOBBYLV\",\"GPS#BRTNNCIVJNOX\",\"COMPASS#CHQFDTRXFYYH\",\"DISTANCE#BTADRXXNMTLE\",\"ANGULAR#BSUTKCCSFEID\",\"ALTIMETER#BSMATKNCOZCB\",\"VISUAL#BSDHDSYLZSUZ\",\"LIDAR#BSHQLOSHHIZA\",\"THERMAL#BSQKCGHXXOFC\",\"ENERGY#BRYXUYDQRDRY\"],\"posx\":0,\"posy\":0}" 
+    // :reply-with  Hound#1nxgy7NMM  :in-reply-to  Hound#1nxgy7NMM  :protocol  REGULAR
+    // :conversation-id  SESSION#dmtai )
+    private ACLMessage sendLogin(JsonArray sensors, int x, int y) {
+        JsonObject content = new JsonObject();
+        content.add("operation", "login");
+        content.add("attach", sensors);
+        content.add("posx", x);
+        content.add("posy", y);
+
+        out = replyToWM;
+        out.setSender(getAID());
+        out.addReceiver(new AID(myWorldManager, AID.ISLOCALNAME));
+        out.setContent(content.toString());
+        out.setProtocol("REGULAR");
+        out.setPerformative(ACLMessage.REQUEST);
+        out.setConversationId(sessionConvID);
+        send(out);
+        return blockingReceive();
+    }
+
 }
