@@ -79,6 +79,7 @@ public class Coach extends AgentInterface {
                 }
                 // Keep the Conversation ID and spread it amongs the team members
                 myConvID = in.getConversationId();
+                Info("ConvID: " + myConvID.toString());
                 this.sendConvID("SeñorEscucha");
                 this.sendConvID("SeñorBusca1");
                 this.sendConvID("SeñorBusca2");
@@ -156,7 +157,7 @@ public class Coach extends AgentInterface {
                 myYP = new YellowPages();
                 myYP.updateYellowPages(in);
                 // It might be the case that YP are right but we dont find an appropriate service for us, then leave
-                if (myYP.queryProvidersofService(myService).isEmpty()) {
+                if (myYP.queryProvidersofService("shop").isEmpty()) {
                     Info("\t" + "There is no agent providing the service " + myService);
                     myStatus = "CHECKOUT-SESSION";
                     break;
@@ -179,7 +180,7 @@ public class Coach extends AgentInterface {
 
                 // Obtener precio sensores
                 // yp es el id de la tienda
-                for(String shop : myYP.queryProvidersofService("shop")){
+                for(String shop : myYP.queryProvidersofService("shop@" + myConvID)){
                     //tenemos mandar un mensaje a la tienda para que nos diga el precio
                     sendShopQuery(shop);
                     in = blockingReceive();
@@ -207,9 +208,8 @@ public class Coach extends AgentInterface {
                             cheapestCharge.get(price).add(referencia + " " + shop);
                         }
                     }
-                    //tenemos que meter el precio en el array de sensores xd
-                    //int precio = Integer.parseInt(yp);
-                    //sensores.add(precio);
+                    
+                    Info("Products of shop " + shop + " OK");
                 }
 
                 myStatus = "WAITTOFINISH";
