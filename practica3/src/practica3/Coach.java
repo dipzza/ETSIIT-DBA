@@ -28,6 +28,7 @@ public class Coach extends AgentInterface {
     LinkedList<String> myChargeSensors = new LinkedList<String>();
     int numSensBuyed = 4;
     int coinsLeft = 4;
+    int rescuersLeft = 4;
 
     public void plainExecute() {
         plainWithErrors();
@@ -81,16 +82,9 @@ public class Coach extends AgentInterface {
                     myStatus = "CHECKOUT-LARVA";
                     break;
                 }
-                // Keep the Conversation ID and spread it amongs the team members
+                // Keep the Conversation ID
                 myConvID = in.getConversationId();
                 Info("ConvID: " + myConvID.toString());
-                this.sendConvID("SeñorVisor");
-                this.sendConvID("SeñorEscucha");
-                this.sendConvID("SeñorBusca1");
-                this.sendConvID("SeñorBusca2");
-                this.sendConvID("SeñorBusca3");
-                this.sendConvID("SeñorBusca4");
-
                 
                 // Move on to get the map
                 myStatus = "PROCESS-MAP";
@@ -115,7 +109,15 @@ public class Coach extends AgentInterface {
                             py = (int) (Math.random() * myMap.getHeight());
                             Info("\tX: " + px + ", Y:" + py + " = " + myMap.getLevel(px, py));
                         }
+                    
                         myStatus = "GETCOINS";
+                        
+                        // Send convID and map
+                        sendConvID("SeñorVisor");
+                        sendMap("SeñorBusca1", in.getContent());
+                        sendMap("SeñorBusca2", in.getContent());
+                        sendMap("SeñorBusca3", in.getContent());
+                        sendMap("SeñorBusca4", in.getContent());
                     } else {
                         Info("\t" + "There was an error processing and saving the image ");
                         myStatus = "CANCEL-WM";
@@ -221,7 +223,7 @@ public class Coach extends AgentInterface {
                 myAngSensors = buySensors(cheapestAng, numSensBuyed);
                 myChargeSensors = buySensors(cheapestCharge, 50);
 
-                Info("Sensor bought");
+                Info("Sensors bought");
 
                 sendSensors("SeñorBusca1", new JsonArray().add(myDistSensors.pollFirst()).add(myAngSensors.pollFirst()).add(myChargeSensors.pollFirst()));
                 sendSensors("SeñorBusca2", new JsonArray().add(myDistSensors.pollFirst()).add(myAngSensors.pollFirst()).add(myChargeSensors.pollFirst()));
@@ -235,7 +237,10 @@ public class Coach extends AgentInterface {
             case "WAITTOFINISH":
                 in = blockingReceive();
                 if (in.getPerformative() == ACLMessage.INFORM) {
-                    if (in.getContent().equals("FinalSession")){
+                    if (in.getContent().equals("FinalSession")) {
+                        rescuersLeft--;
+
+                    if (rescuersLeft == 0)
                         myStatus = "CANCEL-WM";
                     }
                 }
@@ -314,17 +319,6 @@ public class Coach extends AgentInterface {
         return boughtSensors;
     }
 
-    protected void sendConvID (String im) {
-        out = new ACLMessage();
-        out.setSender(getAID());
-        out.addReceiver(new AID(im, AID.ISLOCALNAME));
-        out.setContent("");
-        out.setProtocol("REGULAR");
-        out.setPerformative(ACLMessage.QUERY_IF);
-        out.setConversationId(myConvID);
-        send(out);
-    }
-
     protected void sendShopQuery(String shop) {
         out = new ACLMessage();
         out.setSender(getAID());
@@ -361,8 +355,6 @@ public class Coach extends AgentInterface {
     private void sendSensors(String receiver, JsonArray sensors) {
         JsonObject content = new JsonObject();
         content.add("sensors", sensors);
-        content.add("width", myMap.getWidth());
-        content.add("height", myMap.getWidth());
 
         out = new ACLMessage();
         out.setSender(getAID());
@@ -370,6 +362,28 @@ public class Coach extends AgentInterface {
         out.setContent(content.toString());
         out.setProtocol("REGULAR");
         out.setPerformative(ACLMessage.INFORM);
+        out.setConversationId(myConvID);
+        send(out);
+    }
+
+    private void sendMap(String receiver, String content) {
+        out = new ACLMessage();
+        out.setSender(getAID());
+        out.addReceiver(new AID(receiver, AID.ISLOCALNAME));
+        out.setContent(content);
+        out.setProtocol("REGULAR");
+        out.setPerformative(ACLMessage.PROPAGATE);
+        out.setConversationId(myConvID);
+        send(out);
+    }
+
+    protected void sendConvID (String im) {
+        out = new ACLMessage();
+        out.setSender(getAID());
+        out.addReceiver(new AID(im, AID.ISLOCALNAME));
+        out.setContent("");
+        out.setProtocol("REGULAR");
+        out.setPerformative(ACLMessage.QUERY_IF);
         out.setConversationId(myConvID);
         send(out);
     }

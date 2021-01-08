@@ -18,7 +18,6 @@ public class Explorer {
         
         app.launchAgent("SeñorVisor", awacs.Awacs.class);
         app.launchAgent("ElPepe", Coach.class);
-        app.launchAgent("SeñorEscucha", Listener.class);
         app.launchAgent("SeñorBusca1", Rescuer.class);
         app.launchAgent("SeñorBusca2", Rescuer.class);
         app.launchAgent("SeñorBusca3", Rescuer.class);

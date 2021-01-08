@@ -33,7 +33,7 @@ public class AgentInterface extends IntegratedAgent{
         myService = "Analytics group Inditex";
 
         // The world I am going to open
-        myWorld = "Playground1";
+        myWorld = "Playground2";
 
         // First state of the agent
         myStatus = "CHECKIN-LARVA";
