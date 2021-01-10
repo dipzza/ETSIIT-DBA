@@ -9,7 +9,7 @@ import java.util.Arrays;
  * Implementa la interfaz Comparable para poder comparar estados.
  * 
  * @author Javier, Jose Miguel, Alvaro y Bryan.
- * @version Practica 2 (4.0)
+ * @version Practica 3 (4.0)
  */
 public class State implements Comparable<State> {
     private final int[] position;
@@ -19,7 +19,7 @@ public class State implements Comparable<State> {
     * Constructor de la clase State
     *
     * @author Javier, Jose Miguel, Alvaro y Bryan Alfonso.
-    * @version Practica 2 (1.0)
+    * @version Practica 3 (1.0)
     * @param position[] vector de int que contiene la posicion X, Y y Z del estado.
     * @param orientation int que contiene la orientación del estado.
     */
@@ -41,15 +41,14 @@ public class State implements Comparable<State> {
      * Simula las consequencias de realizar una acción
      * 
      * @author Javier, Jose Miguel, Alvaro y Bryan.
-     * @version Practica 2 (4.0)
+     * @version Practica 3 (4.0)
      * @param action Acción ha realizar.
      * @param map[][] matriz que contiene las alturas del mapa leidas y -1 las posiciones que aun no son leidas por los sensores.
      * @param maximaAltura Altura maxima del mundo.
-     * @param target_position[] vector que contiene la posicion estimada del objetivo.
      * @return El estado resultante de realizar la acción, si no se puede realizar devuelve null.
      * @throws ArrayIndexOutOfBoundsException que indica si se ha accedido a una posición invalida del mapa.
      */
-    public State simulateAction(ACTIONS action, int[][] map, int maximaAltura, int target_position[])
+    public State simulateAction(ACTIONS action, int[][] map, int maximaAltura)
     {
         int[] new_position = position.clone();
         int new_orientation = orientation;
@@ -115,11 +114,12 @@ public class State implements Comparable<State> {
         }
         
         try {
-            int height = map[new_position[Y]][new_position[X]];
+            int height = map[new_position[X]][new_position[Y]];
             
             if (action == touchD && new_position[Z] - height >= 5) {
                 return null;
             }
+            
             if (new_position[Z] >= height && new_position[Z] < maximaAltura && height >= -1)
                 return new State(new_position, new_orientation);
             else
@@ -133,7 +133,7 @@ public class State implements Comparable<State> {
      * Metodo que transforma un array a hash
      * 
      * @author Javier, Jose Miguel, Alvaro y Bryan.
-     * @version Practica 2 (1.0)
+     * @version Practica 3 (1.0)
      * @return El hash resultante de transformar la posicion en codigo hash
      */
     @Override
@@ -148,7 +148,7 @@ public class State implements Comparable<State> {
      * Metodo que iguala el estado con el objeto (parametro)
      * 
      * @author Javier, Jose Miguel, Alvaro y Bryan.
-     * @version Practica 2 (1.0)
+     * @version Practica 3 (1.0)
      * @param obj Objeto a comparar.
      * @return True si el estado es igual al objeto, false si no son iguales
      */ 
@@ -179,7 +179,7 @@ public class State implements Comparable<State> {
      * Metodo que devuelve la posición del estado
      * 
      * @author Javier, Jose Miguel, Alvaro y Bryan.
-     * @version Practica 2 (1.0)
+     * @version Practica 3 (1.0)
      * @return Devuelve el vector posición del estado.
      */ 
     public int[] getPosition() {
@@ -190,7 +190,7 @@ public class State implements Comparable<State> {
      * Metodo que devuelve la orientación del estado.
      * 
      * @author Javier, Jose Miguel, Alvaro y Bryan.
-     * @version Practica 2 (1.0)
+     * @version Practica 3 (1.0)
      * @return Devuelve la orientación del estado.
      */ 
     public int getOrientation() {
@@ -201,7 +201,7 @@ public class State implements Comparable<State> {
      * Metodo que devuelve la posición X del estado
      * 
      * @author Javier, Jose Miguel, Alvaro y Bryan.
-     * @version Practica 2 (1.0)
+     * @version Practica 3 (1.0)
      * @return Devuelve la posición X del estado.
      */ 
     public int getX() {
@@ -212,7 +212,7 @@ public class State implements Comparable<State> {
      * Metodo que devuelve la posición Y del estado
      * 
      * @author Javier, Jose Miguel, Alvaro y Bryan.
-     * @version Practica 2 (1.0)
+     * @version Practica 3 (1.0)
      * @return Devuelve la posición Y del estado.
      */ 
     public int getY() {
@@ -223,7 +223,7 @@ public class State implements Comparable<State> {
      * Metodo que devuelve la posición Z del estado
      * 
      * @author Javier, Jose Miguel, Alvaro y Bryan.
-     * @version Practica 2 (1.0)
+     * @version Practica 3 (1.0)
      * @return Devuelve la posición Z del estado.
      */ 
     public int getZ() {
@@ -234,7 +234,7 @@ public class State implements Comparable<State> {
      * Metodo que compara si el estado actual es igual a otro estado pasado por parametro mirando si sus argumentos son iguales.
      * 
      * @author Javier, Jose Miguel, Alvaro y Bryan.
-     * @version Practica 2 (1.0)
+     * @version Practica 3 (1.0)
      * @param state State a comparar
      * @return True si los argumentos son iguales, false si son diferentes.
      */ 

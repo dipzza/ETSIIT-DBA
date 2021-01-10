@@ -26,7 +26,7 @@ public class Node implements Comparable<Node>{
     * Constructor de la clase Node teniendo en cuenta un padre y una acción realizada.
     *
     * @author Javier, Jose Miguel, Alvaro y Bryan Alfonso.
-    * @version Practica 2 (1.0)
+    * @version Practica 3 (1.0)
     * @param st State Estado actual del nodo.
     * @param g  coste real para llegar al nodo.
     * @param f  suma del coste real mas la estimación de llegar al objetivo.
@@ -45,7 +45,7 @@ public class Node implements Comparable<Node>{
     * Constructor de la clase Node para el nodo inicial del A*.
     *
     * @author Javier, Jose Miguel, Alvaro y Bryan Alfonso.
-    * @version Practica 2 (1.0)
+    * @version Practica 3 (1.0)
     * @param st State Estado actual del nodo.
     * @param g  coste real para llegar al nodo.
     * @param f  suma del coste real mas la estimación de llegar al objetivo.
@@ -63,7 +63,7 @@ public class Node implements Comparable<Node>{
      * Método que devuelve la lista de acciones realizadas para llegar nodo actual.
      * 
      * @author Javier, Jose Miguel, Alvaro y Bryan.
-     * @version Practica 2 (1.0)
+     * @version Practica 3 (1.0)
      * @return LinkedList lista de acciones realizadas para llegar al nodo actual.
      */
     public LinkedList<ACTIONS> getPath()
@@ -84,7 +84,7 @@ public class Node implements Comparable<Node>{
      * Metodo que iguala el nodo con el objeto (parametro)
      * 
      * @author Javier, Jose Miguel, Alvaro y Bryan.
-     * @version Practica 2 (1.0)
+     * @version Practica 3 (1.0)
      * @param o Objeto a comparar.
      * @return True si el nodo es igual al objeto, false si no son iguales
      */ 
@@ -100,7 +100,7 @@ public class Node implements Comparable<Node>{
      * Metodo que genera el hash dado el estado del nodo.
      * 
      * @author Javier, Jose Miguel, Alvaro y Bryan.
-     * @version Practica 2 (1.0)
+     * @version Practica 3 (1.0)
      * @return El hash generado por el estado.
      */
     @Override
@@ -113,7 +113,7 @@ public class Node implements Comparable<Node>{
      * Metodo que compara si el nodo actual es igual a otro estado pasado por parametro mirando si sus argumentos son iguales.
      * 
      * @author Javier, Jose Miguel, Alvaro y Bryan.
-     * @version Practica 2 (1.0)
+     * @version Practica 3 (1.0)
      * @param o Node a comparar
      * @return True si los argumentos son iguales, false si son diferentes.
      */ 
@@ -133,7 +133,7 @@ public class Node implements Comparable<Node>{
      * Metodo que devuelve el estado del nodo.
      * 
      * @author Javier, Jose Miguel, Alvaro y Bryan.
-     * @version Practica 2 (1.0)
+     * @version Practica 3 (1.0)
      * @return Devuelve el estado del nodo.
      */ 
     public State getSt() {
@@ -144,7 +144,7 @@ public class Node implements Comparable<Node>{
      * Metodo que devuelve el coste real del nodo.
      * 
      * @author Javier, Jose Miguel, Alvaro y Bryan.
-     * @version Practica 2 (1.0)
+     * @version Practica 3 (1.0)
      * @return Devuelve el coste real del nodo.
      */ 
     public int getG() {
@@ -155,7 +155,7 @@ public class Node implements Comparable<Node>{
      * Metodo que devuelve la suma de el coste real mas la estimación de llegar al objetivo.
      * 
      * @author Javier, Jose Miguel, Alvaro y Bryan.
-     * @version Practica 2 (1.0)
+     * @version Practica 3 (1.0)
      * @return Devuelve la suma de el coste real mas la estimación de llegar al objetivo.
      */ 
     public double getF() {

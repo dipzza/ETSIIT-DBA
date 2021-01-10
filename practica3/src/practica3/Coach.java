@@ -6,6 +6,7 @@ import static ACLMessageTools.ACLMessageTools.getJsonContentACLM;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.TreeMap;
+import java.util.HashMap;
 
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonArray;
@@ -17,22 +18,41 @@ import YellowPages.YellowPages;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 
-/**e
+/**
+ * Clase que implementa el coach.
+ * Extendida de la clase AgentInterface 
  *
- * @author inditex
+ * @author Javier, Jose Miguel, Alvaro y Bryan.
+ * @version Practica 3 (1.0)
  */
+ 
 public class Coach extends AgentInterface {
     LinkedList<String> myCoins = new LinkedList<String>();
     LinkedList<String> myDistSensors = new LinkedList<String>();
     LinkedList<String> myAngSensors = new LinkedList<String>();
-    LinkedList<String> myChargeSensors = new LinkedList<String>();
+    LinkedList<String> myCharges = new LinkedList<String>();
+    HashMap<ArrayList<Integer>, String> rescuers_waiting = new HashMap<>();
+
     int numSensBuyed = 4;
     int coinsLeft = 4;
     int rescuersLeft = 4;
+    int numAlems = 0;
 
+    /**
+    * Método que ejecuta el plainWithErrors
+    * @author Javier, Jose Miguel, Alvaro y Bryan Alfonso.
+    * @version Practica 3 (1.0)
+    */
+    
     public void plainExecute() {
         plainWithErrors();
     }
+
+    /**
+    * Método que va ejecutando diferentes metodos dependiendo del estado en el que este el dron
+    * @author Javier, Jose Miguel, Alvaro y Bryan Alfonso.
+    * @version Practica 3 (1.0)
+    */
 
     public void plainWithErrors() {
         // Basic iteration
@@ -83,8 +103,8 @@ public class Coach extends AgentInterface {
                     break;
                 }
                 // Keep the Conversation ID
-                myConvID = in.getConversationId();
-                Info("ConvID: " + myConvID.toString());
+                sessionConvID = in.getConversationId();
+                Info("ConvID: " + sessionConvID.toString());
                 
                 // Move on to get the map
                 myStatus = "PROCESS-MAP";
@@ -110,21 +130,32 @@ public class Coach extends AgentInterface {
                             Info("\tX: " + px + ", Y:" + py + " = " + myMap.getLevel(px, py));
                         }
                     
-                        myStatus = "GETCOINS";
                         
+                
                         // Send convID and map
+                        String mapa = in.getContent();
+
                         sendConvID("SeñorVisor");
-                        sendMap("SeñorBusca1", in.getContent());
-                        sendMap("SeñorBusca2", in.getContent());
-                        sendMap("SeñorBusca3", in.getContent());
-                        sendMap("SeñorBusca4", in.getContent());
+                        
+                        for(int i=1; i<=4; i++){
+                            in = sendMap("SeñorBusca" + i, mapa);
+                            if (in.getPerformative() != ACLMessage.CONFIRM) {
+                                Info("\t" + ACLMessage.getPerformative(in.getPerformative())
+                                + " Send map failed due to " + getDetailsLARVA(in));
+                                myStatus = "CHECKOUT-SESSION";
+                                break;
+                            }
+                        }   
+
+                        myStatus = "GETCOINS";
+
                     } else {
                         Info("\t" + "There was an error processing and saving the image ");
                         myStatus = "CANCEL-WM";
                         break;
                     }
                 } else {
-                    Info("\t" + "There is no map found in the message");
+                    Info ("\t" + "There is no map found in the message");
                     myStatus = "CANCEL-WM";
                     break;
                 }
@@ -187,7 +218,7 @@ public class Coach extends AgentInterface {
 
                 // Obtener precio sensores
                 // yp es el id de la tienda
-                for(String shop : myYP.queryProvidersofService("shop@" + myConvID)){
+                for(String shop : myYP.queryProvidersofService("shop@" + sessionConvID)){
                     //tenemos mandar un mensaje a la tienda para que nos diga el precio
                     sendShopQuery(shop);
                     in = blockingReceive();
@@ -221,34 +252,92 @@ public class Coach extends AgentInterface {
 
                 myDistSensors = buySensors(cheapestDist, numSensBuyed);
                 myAngSensors = buySensors(cheapestAng, numSensBuyed);
-                myChargeSensors = buySensors(cheapestCharge, 50);
+                myCharges = buySensors(cheapestCharge, 50);
 
                 Info("Sensors bought");
 
-                sendSensors("SeñorBusca1", new JsonArray().add(myDistSensors.pollFirst()).add(myAngSensors.pollFirst()).add(myChargeSensors.pollFirst()));
-                sendSensors("SeñorBusca2", new JsonArray().add(myDistSensors.pollFirst()).add(myAngSensors.pollFirst()).add(myChargeSensors.pollFirst()));
-                sendSensors("SeñorBusca3", new JsonArray().add(myDistSensors.pollFirst()).add(myAngSensors.pollFirst()).add(myChargeSensors.pollFirst()));
-                sendSensors("SeñorBusca4", new JsonArray().add(myDistSensors.pollFirst()).add(myAngSensors.pollFirst()).add(myChargeSensors.pollFirst()));
+                sendSensors("SeñorBusca1", new JsonArray().add(myDistSensors.pollFirst()).add(myAngSensors.pollFirst()));
+                sendSensors("SeñorBusca2", new JsonArray().add(myDistSensors.pollFirst()).add(myAngSensors.pollFirst()));
+                sendSensors("SeñorBusca3", new JsonArray().add(myDistSensors.pollFirst()).add(myAngSensors.pollFirst()));
+                sendSensors("SeñorBusca4", new JsonArray().add(myDistSensors.pollFirst()).add(myAngSensors.pollFirst()));
 
-                myStatus = "WAITTOFINISH";
+                myStatus = "LISTENING";
 
-                break;
+            break;
             
-            case "WAITTOFINISH":
+            case "LISTENING":
                 in = blockingReceive();
+
+                if (in.getPerformative() == ACLMessage.REQUEST) {
+                    if (in.getContent().equals("RECARGA")){
+                        if (myCharges.isEmpty()) {
+                            Info("NO QUEDAN RECARGAS :( rip");
+                            sendReply(ACLMessage.FAILURE, "REGULAR", "No charges left");
+                        }
+                        sendReply(ACLMessage.INFORM, "REGULAR", myCharges.pollFirst());
+                    }
+                }
+
                 if (in.getPerformative() == ACLMessage.INFORM) {
                     if (in.getContent().equals("FinalSession")) {
                         rescuersLeft--;
 
-                    if (rescuersLeft == 0)
-                        myStatus = "CANCEL-WM";
+                        if (rescuersLeft == 0) {
+                            myStatus = "CANCEL-WM";
+                        }
+                    } else {
+                        JsonObject respuesta = Json.parse(in.getContent()).asObject();
+                        String sender = in.getSender().getLocalName();
+                        int x = respuesta.get("x").asInt();
+                        int y = respuesta.get("y").asInt();
+                        ArrayList<Integer> position = new ArrayList<>(2);
+
+                        switch(sender) {
+                            case "SeñorBusca1":
+                                position.add(0, x);
+                                position.add(1, y);
+                            break;
+                            
+                            case "SeñorBusca2":
+                                position.add(0, x + myMap.getWidth()/2);
+                                position.add(1, y);
+                            break;
+                            
+                            case "SeñorBusca3":
+                                position.add(0, x);
+                                position.add(1, y + myMap.getHeight()/2);
+                            break;
+                            
+                            case "SeñorBusca4":
+                                position.add(0, x + myMap.getWidth()/2);
+                                position.add(1, y + myMap.getHeight()/2);
+                            break;
+                        }
+
+                        if (respuesta.get("state").asString().equals("waiting")) {
+                            if(numAlems < 10) {
+                                rescuers_waiting.put(position, sender);
+                            } else {
+                                sendCancelRescuer(sender);
+                            }
+                        } else if (respuesta.get("state").asString().equals("rescue")) {
+                            numAlems++;  
+                            if (rescuers_waiting.containsKey(position)) {
+                                if (numAlems == 10)
+                                    sendCancelRescuer(rescuers_waiting.get(position));
+                                else
+                                    sendWakeUp(rescuers_waiting.get(position));
+                                rescuers_waiting.remove(position);
+                            }
+                        }
                     }
                 }
+                
                 break;
             
             case "CANCEL-WM":
                 Info("Closing the game");
-                in = sendCANCELWM(myConvID);
+                in = sendCANCELWM(sessionConvID);
                 myStatus = "CHECKOUT-LARVA";
                 break;
             case "CHECKOUT-LARVA":
@@ -263,7 +352,15 @@ public class Coach extends AgentInterface {
         }
     }
 
-    // Devuelve una matriz con el siguiente formato: [Shop, Reference, Price], ...
+    /**
+    * Método encargado de devolver la tienda en la que se va a comprar el producto segun el mapa.
+    * @author Javier, Jose Miguel, Alvaro y Bryan Alfonso.
+    * @version Practica 3 (1.0)
+    * @param cheapest_products Sensor que va a comprar.
+    * @param quantity Cantidad de productos que va a comprar.
+    * @return Matriz con el siguiente formato: [Shop, Reference, Price]
+    */ 
+    
     private ArrayList<ArrayList<Object>> getProductFromMap(TreeMap<Integer, ArrayList<String>> cheapest_products, int quantity) {
         ArrayList<ArrayList<Object>> products = new ArrayList<>();
         int i = 0;
@@ -289,6 +386,15 @@ public class Coach extends AgentInterface {
         return products;
     }
 
+/**
+    * Método encargado de comprar los sensores.
+    * @author Javier, Jose Miguel, Alvaro y Bryan Alfonso.
+    * @version Practica 3 (1.0)
+    * @param cheapest_products Sensor que va a comprar.
+    * @param quantity Cantidad de productos que va a comprar.
+    * @return Matriz con el siguiente formato: [Shop, Reference, Price]
+    */    
+    
     private LinkedList<String> buySensors(TreeMap<Integer, ArrayList<String>> cheapest_products, int quantity) {
         LinkedList<String> boughtSensors = new LinkedList<>();
 
@@ -319,6 +425,12 @@ public class Coach extends AgentInterface {
         return boughtSensors;
     }
 
+    /**
+    * Método encargado de enviar un mensaje a la tienda para qe devuelva la lista de productos.
+    * @author Javier, Jose Miguel, Alvaro y Bryan Alfonso.
+    * @version Practica 3 (1.0)
+    */   
+
     protected void sendShopQuery(String shop) {
         out = new ACLMessage();
         out.setSender(getAID());
@@ -326,9 +438,15 @@ public class Coach extends AgentInterface {
         out.setContent("{}");
         out.setProtocol("REGULAR");
         out.setPerformative(ACLMessage.QUERY_REF);
-        out.setConversationId(myConvID);
+        out.setConversationId(sessionConvID);
         send(out);
     }
+
+    /**
+    * Método encargado de enviar un mensaje con el producto comprado.
+    * @author Javier, Jose Miguel, Alvaro y Bryan Alfonso.
+    * @version Practica 3 (1.0)
+    */   
 
     protected void sendBuyProduct(String shop, String reference, ArrayList<String> coins) {
         JsonObject content = new JsonObject();
@@ -348,9 +466,17 @@ public class Coach extends AgentInterface {
         out.setContent(content.toString());
         out.setProtocol("REGULAR");
         out.setPerformative(ACLMessage.REQUEST);
-        out.setConversationId(myConvID);
+        out.setConversationId(sessionConvID);
         send(out);
     }
+
+    /**
+    * Método encargado de enviar los sensores a los drones junto a sus recargas.
+    * @author Javier, Jose Miguel, Alvaro y Bryan Alfonso.
+    * @version Practica 3 (1.0)
+    * @param receiver Dron al que va destinado los sensores y la recarga
+    * @param sensors Sensores que ha comprado para el dron
+    */   
 
     private void sendSensors(String receiver, JsonArray sensors) {
         JsonObject content = new JsonObject();
@@ -362,20 +488,72 @@ public class Coach extends AgentInterface {
         out.setContent(content.toString());
         out.setProtocol("REGULAR");
         out.setPerformative(ACLMessage.INFORM);
-        out.setConversationId(myConvID);
+        out.setConversationId(sessionConvID);
         send(out);
     }
 
-    private void sendMap(String receiver, String content) {
+    /**
+    * Método encargado de enviar el mapa a los drones
+    * @author Javier, Jose Miguel, Alvaro y Bryan Alfonso.
+    * @version Practica 3 (1.0)
+    * @param receiver Dron al que va destinado el mapa
+    * @param content Contenido del mensaje(mapa)
+    */   
+
+    private ACLMessage sendMap(String receiver, String content) {
         out = new ACLMessage();
         out.setSender(getAID());
         out.addReceiver(new AID(receiver, AID.ISLOCALNAME));
         out.setContent(content);
         out.setProtocol("REGULAR");
         out.setPerformative(ACLMessage.PROPAGATE);
-        out.setConversationId(myConvID);
+        out.setConversationId(sessionConvID);
+        send(out);
+        return blockingReceive();
+    }
+
+    /**
+    * Método encargado de despertar a un dron que esta esperando un mensaje.
+    * @author Javier, Jose Miguel, Alvaro y Bryan Alfonso.
+    * @version Practica 3 (1.0)
+    * @param reciever Receptor del mensaje
+    */  
+
+    private void sendWakeUp(String receiver) {
+        out = new ACLMessage();
+        out.setSender(getAID());
+        out.addReceiver(new AID(receiver, AID.ISLOCALNAME));
+        out.setContent("wakeUp");
+        out.setProtocol("REGULAR");
+        out.setPerformative(ACLMessage.REQUEST);
+        out.setConversationId(sessionConvID);
         send(out);
     }
+
+    /**
+    * Método encargado de hacer que un dron se mate ;-;
+    * @author Javier, Jose Miguel, Alvaro y Bryan Alfonso.
+    * @version Practica 3 (1.0)
+    * @param reciever Receptor del mensaje
+    */  
+
+    private void sendCancelRescuer(String receiver) {
+        out = new ACLMessage();
+        out.setSender(getAID());
+        out.addReceiver(new AID(receiver, AID.ISLOCALNAME));
+        out.setContent("All germans found");
+        out.setProtocol("REGULAR");
+        out.setPerformative(ACLMessage.CANCEL);
+        out.setConversationId(sessionConvID);
+        send(out);
+    }
+
+    /**
+    * Método encargado de enviar la ConvIde al agente que se le pase por parametro.
+    * @author Javier, Jose Miguel, Alvaro y Bryan Alfonso.
+    * @version Practica 3 (1.0)
+    * @param im receptor del mensaje
+    */  
 
     protected void sendConvID (String im) {
         out = new ACLMessage();
@@ -384,7 +562,29 @@ public class Coach extends AgentInterface {
         out.setContent("");
         out.setProtocol("REGULAR");
         out.setPerformative(ACLMessage.QUERY_IF);
-        out.setConversationId(myConvID);
+        out.setConversationId(sessionConvID);
         send(out);
+    }
+
+    /**
+    * Método encargado de enviar una respuesta al servidor.
+    * @author Javier, Jose Miguel, Alvaro y Bryan Alfonso.
+    * @version Practica 3 (1.0)
+    * @param perf Performativa del mensaje
+    * @param protocol Protocolo del mensaje
+    * @param cont contenido del mensaje
+    */   
+
+    protected void sendReply(int perf, String protocol, String cont) {
+        out = in.createReply();
+        out.setPerformative(perf);
+        out.setContent(cont);
+        out.setProtocol(protocol);
+
+        if (perf == ACLMessage.SUBSCRIBE) {
+            out.setEncoding(_myCardID.getCardID());
+        }
+
+        this.send(out);
     }
 }

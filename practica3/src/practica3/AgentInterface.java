@@ -8,18 +8,27 @@ import com.eclipsesource.json.JsonObject;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 
-/**e
- *
- * @author inditex
- */
+ /**
+  * Clase que hace de interfaz del Coach y del rescuer.
+  * Extendida de la clase IntegratedAgent
+  *
+  * @author Javier, Jose Miguel, Alvaro y Bryan Alfonso.
+  * @version Practica 3 (1.0)
+  */
 
 public class AgentInterface extends IntegratedAgent{
 
     protected YellowPages myYP;
-    protected String myStatus, myService, myWorldManager, myWorld, myConvID, sessionConvID;
+    protected String myStatus, myService, myWorldManager, myWorld, sessionConvID;
     protected boolean myError;
     protected ACLMessage in, out;
     protected Map2DGrayscale myMap;
+
+     /**
+    * Método encargado de iniciar la comunicación con el servidor.
+    * @author Javier, Jose Miguel, Alvaro y Bryan Alfonso.
+    * @version Practica 3 (1.0)
+    */
 
     @Override
     public void setup()   {
@@ -43,12 +52,27 @@ public class AgentInterface extends IntegratedAgent{
 
         _exitRequested = false;
     }
+
+     /**
+    * Método encargado de desconectar del servicio de Larva
+    * @author Javier, Jose Miguel, Alvaro y Bryan Alfonso.
+    * @version Practica 2 (1.0)
+    */
     
     @Override
     public void takeDown() {
         Info("Taking down");
         super.takeDown();
     }
+
+    /**
+    * Método encargado de enviar la respuesta del agente al servidor
+    * @author Javier, Jose Miguel, Alvaro y Bryan Alfonso.
+    * @version Practica 3 (1.0)
+    * @param perf Performativa del mensaje
+    * @param protocol Protocolo del mensaje
+    * @param cont contenido del mensaje
+    */   
 
     protected void sendReply(int perf, String protocol, String cont) {
         out = in.createReply();
@@ -62,6 +86,16 @@ public class AgentInterface extends IntegratedAgent{
 
         this.send(out);
     }
+
+    /**
+    * Método encargado de enviar un mensaje a otro agente.
+    * @author Javier, Jose Miguel, Alvaro y Bryan Alfonso.
+    * @version Practica 3 (1.0)
+    * @param reciever Destinatario del mensaje.
+    * @param perf Performativa del mensaje
+    * @param protocol Protocolo del mensaje
+    * @param cont contenido del mensaje
+    */   
 
     protected void sendMsg(String receiver, int perf, String protocol, String cont) {
         out = new ACLMessage();
@@ -79,6 +113,14 @@ public class AgentInterface extends IntegratedAgent{
         this.send(out);
     }
 
+    /**
+    * Método encargado de enviar una peticion de login a LARVA
+    * @author Javier, Jose Miguel, Alvaro y Bryan Alfonso.
+    * @version Practica 3 (1.0)
+    * @param im Destinatario del mensaje
+    * @return Mensaje que la petición para iniciar sesión en LARVA 
+    */   
+    
     protected ACLMessage sendCheckinLARVA(String im) {
         out = new ACLMessage();
         out.setSender(getAID());
@@ -91,6 +133,14 @@ public class AgentInterface extends IntegratedAgent{
         return blockingReceive();
     }
 
+    /**
+    * Método encargado de enviar una peticion para desconectarse de LARVA
+    * @author Javier, Jose Miguel, Alvaro y Bryan Alfonso.
+    * @version Practica 3 (1.0)
+    * @param im Destinatario del mensaje
+    * @return Mensaje que contiene la peticion para desloguearse de LARVA.
+    */   
+
     protected ACLMessage sendCheckoutLARVA(String im) {
         out = new ACLMessage();
         out.setSender(getAID());
@@ -102,6 +152,14 @@ public class AgentInterface extends IntegratedAgent{
         return blockingReceive();
     }
 
+    /**
+    * Método encargado de enviar una petición para subscribirse a un mapa.
+    * @author Javier, Jose Miguel, Alvaro y Bryan Alfonso.
+    * @version Practica 3 (1.0)
+    * @param problem Mapa al que loguearte
+    * @return Mensaje que contiene a qué mapa va a loguerase. 
+    */   
+
     protected ACLMessage sendSubscribeWM(String problem) {
         out = new ACLMessage();
         out.setSender(getAID());
@@ -112,6 +170,14 @@ public class AgentInterface extends IntegratedAgent{
         this.send(out);
         return this.blockingReceive();
     }
+
+    /**
+    * Método encargado de enviar una petición para loguearse de un agente y su tipo.
+    * @author Javier, Jose Miguel, Alvaro y Bryan Alfonso.
+    * @version Practica 3 (1.0)
+    * @param agentType Tipo de agente que se va a subscribir
+    * @return mensaje que contiene el tipo de agente que se va a subscribir a la sesion
+    */   
 
     protected ACLMessage sendSubscribeSession(String agentType) {
         out = new ACLMessage();
@@ -125,6 +191,14 @@ public class AgentInterface extends IntegratedAgent{
         return this.blockingReceive();
     }
 
+    /**
+    * Método encargado de enviar para cerrar la sesion con el World Manager
+    * @author Javier, Jose Miguel, Alvaro y Bryan Alfonso.
+    * @version Practica 3 (1.0)
+    * @param convID ID de la conversación.
+    * @return Mensaje que contiene la petición para cerrar sesion con el WM.
+    */ 
+    
     protected ACLMessage sendCANCELWM(String convID) {
         out = new ACLMessage();
         out.setSender(getAID());
@@ -136,6 +210,14 @@ public class AgentInterface extends IntegratedAgent{
         send(out);
         return blockingReceive();
     }
+
+    /**
+    * Método encargado de pedir las paginas amarillas.
+    * @author Javier, Jose Miguel, Alvaro y Bryan Alfonso.
+    * @version Practica 3 (1.0)
+    * @param im Destinatario del mensaje
+    * @return Mensaje que contiene las paginas amarillas.
+    */ 
 
     protected ACLMessage queryYellowPages(String im) {
         YellowPages res = null;
