@@ -356,6 +356,7 @@ public class Rescuer extends AgentInterface {
                             myStatus = "SENSORS";
                         } else if (in.getPerformative() == ACLMessage.CANCEL) {
                             sendOperation("touchD");
+                            energy -= 20;
                             myStatus = "CHECKOUT-LARVA";
                         }
                         else {
@@ -451,7 +452,7 @@ public class Rescuer extends AgentInterface {
             State next_st = actual_st.simulateAction(action, local_map, 256);
             int altura = local_map[next_st.getX()][next_st.getY()];
 
-            if (!recargando && next_energy < 50 && actual_st.getZ() - local_map[actual_st.getX()][actual_st.getY()] == 0) {
+            if (!recargando && next_energy < 80 && actual_st.getZ() - local_map[actual_st.getX()][actual_st.getY()] == 0) {
                 plan.addFirst(ACTIONS.recharge);
             }
             else if (!recargando && next_st == null || altura == -1) {
@@ -461,7 +462,7 @@ public class Rescuer extends AgentInterface {
                 } else {
                     myStatus = "SENSORS";
                 }
-            } else if (!recargando && (next_st.getZ() - altura) + 20 >= next_energy) {
+            } else if (!recargando && (next_st.getZ() - altura) * 4 + 20 >= next_energy) {
                 myStatus = "RECHARGE";
                 recargando = true;
             } else {
@@ -483,13 +484,13 @@ public class Rescuer extends AgentInterface {
                             return;
                         }
                     }
-                } else {
-                    in = sendOperation(action.toString());
-                    if (in.getPerformative() != ACLMessage.INFORM) {
-                            Info("\t" + ACLMessage.getPerformative(in.getPerformative())
-                                    + "Action failed due to " + getDetailsLARVA(in));
-                            myStatus = "CHECKOUT-LARVA";
-                            return;
+                    } else {
+                        in = sendOperation(action.toString());
+                        if (in.getPerformative() != ACLMessage.INFORM) {
+                                Info("\t" + ACLMessage.getPerformative(in.getPerformative())
+                                        + "Action failed due to " + getDetailsLARVA(in));
+                                myStatus = "CHECKOUT-LARVA";
+                                return;
                     }
                     Info("Acción: " + action.toString() + Json.parse(in.getContent()).asObject().toString());
                     
